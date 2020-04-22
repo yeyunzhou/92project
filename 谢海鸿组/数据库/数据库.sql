@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      ORACLE Version 11g                           */
-/* Created on:     2020-04-20 20:14:29                          */
+/* Created on:     2020-04-21 21:10:44                          */
 /*==============================================================*/
 
 
@@ -161,7 +161,10 @@ create table "t_leave"
    "leaveReason"         varchar2(50),
    "leaveTime"          DATE,
    "stopLeave"          DATE,
+   "context"            varchar2(200),
+   "approvals"          varchar2(20),
    "leaveState"         varchar2(5),
+   "final"              varchar2(5),
    constraint PK_T_LEAVE primary key ("leaveID")
 );
 
@@ -274,8 +277,8 @@ create table "t_wage"
    "absenteeism"        number(11,2),
    "lateAndEarly"       number(11,2),
    "leave"              number(11,2),
-   "wageDate"           date,
    "wageState"          varchar2(5),
+   "wageDate"           date,
    constraint PK_T_WAGE primary key ("wageId")
 );
 
