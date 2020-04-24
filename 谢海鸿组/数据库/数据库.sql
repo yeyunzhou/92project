@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      ORACLE Version 11g                           */
-/* Created on:     2020-04-20 20:14:29                          */
+/* Created on:     2020-04-23 22:24:07                          */
 /*==============================================================*/
 
 
@@ -13,6 +13,9 @@ alter table "t_affiche"
 alter table "t_attendance"
    drop constraint FK_T_ATTEND_REFERENCE_T_TREE_U;
 
+alter table "t_attendance"
+   drop constraint FK_T_ATTEND_REFERENCE_T_DEPART;
+
 alter table "t_evection"
    drop constraint FK_T_EVECTI_REFERENCE_T_TREE_U;
 
@@ -21,6 +24,9 @@ alter table "t_leave"
 
 alter table "t_overtim"
    drop constraint FK_T_OVERTI_REFERENCE_T_TREE_U;
+
+alter table "t_pro_dimission"
+   drop constraint FK_T_PRO_DI_REFERENCE_T_TREE_U;
 
 alter table "t_pro_task"
    drop constraint FK_T_PRO_TA_REFERENCE_T_TREE_U;
@@ -56,6 +62,8 @@ drop table "t_evection" cascade constraints;
 drop table "t_leave" cascade constraints;
 
 drop table "t_overtim" cascade constraints;
+
+drop table "t_pro_dimission" cascade constraints;
 
 drop table "t_pro_task" cascade constraints;
 
@@ -161,7 +169,10 @@ create table "t_leave"
    "leaveReason"         varchar2(50),
    "leaveTime"          DATE,
    "stopLeave"          DATE,
+   "context"            varchar2(200),
+   "approval"           varchar2(20),
    "leaveState"         varchar2(5),
+   "final"              varchar2(5),
    constraint PK_T_LEAVE primary key ("leaveID")
 );
 
@@ -178,6 +189,20 @@ create table "t_overtim"
    "overtimeDated"      DATE,
    "overtimState"       varchar2(5),
    constraint PK_T_OVERTIM primary key ("overtimID")
+);
+
+/*==============================================================*/
+/* Table: "t_pro_dimission"                                     */
+/*==============================================================*/
+create table "t_pro_dimission" 
+(
+   "dimission_id"       number(11)           not null,
+   USERID               NUMBER(11),
+   "dim_date"           DATE,
+   "position"           varcahr2(50),
+   "state"              varcahr2(10),
+   "final"              varchar2(20),
+   constraint PK_T_PRO_DIMISSION primary key ("dimission_id")
 );
 
 /*==============================================================*/
@@ -257,10 +282,10 @@ create table "t_tree_user_role"
 /*==============================================================*/
 create table "t_wage" 
 (
-   "wageId"             number               not null,
+   "wageid"             number               not null,
    USERID               number(11),
    DEPTID               number(11),
-   "basewage"           number(11,2),
+   "baseWage"           number(11,2),
    "postwage"           number(11,2),
    "bonus"              number(11,2),
    "welfare"            number(11,2),
@@ -274,9 +299,9 @@ create table "t_wage"
    "absenteeism"        number(11,2),
    "lateAndEarly"       number(11,2),
    "leave"              number(11,2),
-   "wageDate"           date,
    "wageState"          varchar2(5),
-   constraint PK_T_WAGE primary key ("wageId")
+   "wageDate"           date,
+   constraint PK_T_WAGE primary key ("wageid")
 );
 
 alter table T_TREE_USER
@@ -291,6 +316,10 @@ alter table "t_attendance"
    add constraint FK_T_ATTEND_REFERENCE_T_TREE_U foreign key (USERID)
       references T_TREE_USER (USERID);
 
+alter table "t_attendance"
+   add constraint FK_T_ATTEND_REFERENCE_T_DEPART foreign key (DEPTID)
+      references "t_department" (DEPTID);
+
 alter table "t_evection"
    add constraint FK_T_EVECTI_REFERENCE_T_TREE_U foreign key (USERID)
       references T_TREE_USER (USERID);
@@ -301,6 +330,10 @@ alter table "t_leave"
 
 alter table "t_overtim"
    add constraint FK_T_OVERTI_REFERENCE_T_TREE_U foreign key (USERID)
+      references T_TREE_USER (USERID);
+
+alter table "t_pro_dimission"
+   add constraint FK_T_PRO_DI_REFERENCE_T_TREE_U foreign key (USERID)
       references T_TREE_USER (USERID);
 
 alter table "t_pro_task"
