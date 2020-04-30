@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      ORACLE Version 11g                           */
-/* Created on:     2020-04-23 22:24:07                          */
+/* Created on:     2020-04-25 19:49:06                          */
 /*==============================================================*/
 
 
@@ -19,6 +19,9 @@ alter table "t_attendance"
 alter table "t_evection"
    drop constraint FK_T_EVECTI_REFERENCE_T_TREE_U;
 
+alter table "t_evectionAccount"
+   drop constraint FK_T_EVECTI_REFERENCE_T_EVECTI;
+
 alter table "t_leave"
    drop constraint FK_T_LEAVE_REFERENCE_T_TREE_U;
 
@@ -27,6 +30,9 @@ alter table "t_overtim"
 
 alter table "t_pro_dimission"
    drop constraint FK_T_PRO_DI_REFERENCE_T_TREE_U;
+
+alter table "t_pro_plan"
+   drop constraint FK_T_PRO_PL_REFERENCE_T_PRO_TA;
 
 alter table "t_pro_task"
    drop constraint FK_T_PRO_TA_REFERENCE_T_TREE_U;
@@ -59,11 +65,15 @@ drop table "t_department" cascade constraints;
 
 drop table "t_evection" cascade constraints;
 
+drop table "t_evectionAccount" cascade constraints;
+
 drop table "t_leave" cascade constraints;
 
 drop table "t_overtim" cascade constraints;
 
 drop table "t_pro_dimission" cascade constraints;
+
+drop table "t_pro_plan" cascade constraints;
 
 drop table "t_pro_task" cascade constraints;
 
@@ -76,6 +86,8 @@ drop table "t_tree_role_resource" cascade constraints;
 drop table "t_tree_user_role" cascade constraints;
 
 drop table "t_wage" cascade constraints;
+
+drop table "welfare" cascade constraints;
 
 /*==============================================================*/
 /* Table: T_TREE_USER                                           */
@@ -100,6 +112,7 @@ create table T_TREE_USER
    CITY                 VARCHAR2(100),
    AREA                 VARCHAR2(100),
    ADDRESS              VARCHAR2(100),
+   BASEPAY              NUMBER(11,2),
    UPNO                 NUMBER(11),
    DEPTID               NUMBER(11),
    constraint PK_T_TREE_USER primary key (USERID)
@@ -114,6 +127,7 @@ create table "t_affiche"
    USERID               NUMBER(11),
    "title"              varchar2(50),
    "affiche_content"    varchar2(300),
+   "releasetime"        date,
    constraint PK_T_AFFICHE primary key ("affiche_id")
 );
 
@@ -126,8 +140,6 @@ create table "t_attendance"
    USERID               number(11),
    DEPTID               number(11),
    "morningHours"       DATE,
-   "morningClosingtime" DATE,
-   "afternoonHours"     DATE,
    "afternoonClosingtime" DATE,
    "recordDate"         DATE,
    "remark"             varchar2(50),
@@ -156,8 +168,47 @@ create table "t_evection"
    "evectionReason"     varchar2(50),
    "stoPevection"       DATE,
    "evectionState"      varchar2(5),
+   "approver"           NUMBER(11),
+   "remark"             varchar2(50),
    constraint PK_T_EVECTION primary key ("evectionID")
 );
+
+comment on column "t_evection"."approver" is
+'审批人';
+
+/*==============================================================*/
+/* Table: "t_evectionAccount"                                   */
+/*==============================================================*/
+create table "t_evectionAccount" 
+(
+   "evectionAccountID"  number(11),
+   "evectionID"         number(11),
+   "subsidy"            number(2),
+   "evectiondays"       number,
+   "total"              number(2),
+   "evectionAccountState" number(5)
+);
+
+comment on table "t_evectionAccount" is
+'出差明细表';
+
+comment on column "t_evectionAccount"."evectionAccountID" is
+'编号';
+
+comment on column "t_evectionAccount"."evectionID" is
+'出差表编号';
+
+comment on column "t_evectionAccount"."subsidy" is
+'补贴';
+
+comment on column "t_evectionAccount"."evectiondays" is
+'天数';
+
+comment on column "t_evectionAccount"."total" is
+'共计';
+
+comment on column "t_evectionAccount"."evectionAccountState" is
+'是否发放';
 
 /*==============================================================*/
 /* Table: "t_leave"                                             */
@@ -165,7 +216,7 @@ create table "t_evection"
 create table "t_leave" 
 (
    "leaveID"            number(11)           not null,
-   USERID               number(11),
+   USERID               NUMBER(11),
    "leaveReason"         varchar2(50),
    "leaveTime"          DATE,
    "stopLeave"          DATE,
@@ -173,8 +224,13 @@ create table "t_leave"
    "approval"           varchar2(20),
    "leaveState"         varchar2(5),
    "final"              varchar2(5),
+   "approver"           NUMBER(11),
+   "remark"             varchar2(50),
    constraint PK_T_LEAVE primary key ("leaveID")
 );
+
+comment on column "t_leave"."approver" is
+'审批人';
 
 /*==============================================================*/
 /* Table: "t_overtim"                                           */
@@ -183,26 +239,51 @@ create table "t_overtim"
 (
    "overtimID"          number(11)           not null,
    USERID               number(11),
-   "overtimType"        VARCHAR2(50),
    "overtimeDate"       DATE,
    "stoPovertime"       DATE,
    "overtimeDated"      DATE,
    "overtimState"       varchar2(5),
+   "overtimReason"      varchar2(50),
+   "approver"           NUMBER(11),
+   "remark"             varchar(250),
    constraint PK_T_OVERTIM primary key ("overtimID")
 );
+
+comment on column "t_overtim"."overtimReason" is
+'加班原因';
+
+comment on column "t_overtim"."approver" is
+'审批人';
 
 /*==============================================================*/
 /* Table: "t_pro_dimission"                                     */
 /*==============================================================*/
 create table "t_pro_dimission" 
 (
-   "dimission_id"       number(11)           not null,
+   "dmission_id"        number(11),
    USERID               NUMBER(11),
    "dim_date"           DATE,
-   "position"           varcahr2(50),
-   "state"              varcahr2(10),
-   "final"              varchar2(20),
-   constraint PK_T_PRO_DIMISSION primary key ("dimission_id")
+   "position"           varchar2(50),
+   "exist_task"         varchar2(20),
+   "heir"               NUMBER(11),
+   "state"              varchar2(10),
+   "final"              varchar2(20)
+);
+
+/*==============================================================*/
+/* Table: "t_pro_plan"                                          */
+/*==============================================================*/
+create table "t_pro_plan" 
+(
+   "planid"             number               not null,
+   "taskid"             number,
+   "planname"           varchar2(20),
+   "state"              varchar2(20),
+   "begintime"          date,
+   "endtime"            date,
+   "info"               varchar2(50),
+   "desc"               varchar2(100),
+   constraint PK_T_PRO_PLAN primary key ("planid")
 );
 
 /*==============================================================*/
@@ -210,15 +291,15 @@ create table "t_pro_dimission"
 /*==============================================================*/
 create table "t_pro_task" 
 (
-   "task_id"            number               not null,
-   "task_name"          varchar2(255),
-   "begin_date"         DATE,
-   "end_date"           DATE,
+   "taskid"             number               not null,
+   "taskname"           varchar2(255),
+   "begindate"          DATE,
+   "enddate"            DATE,
    "status"             varchar2(20),
-   "bonus"              NUMBER(11,2),
-   USERID               number(11),
-   "task_desc"          varchar2(255),
-   constraint PK_T_PRO_TASK primary key ("task_id")
+   USERID               NUMBER(11),
+   "sharer"             NUMBER(11),
+   "taskdesc"           varchar2(255),
+   constraint PK_T_PRO_TASK primary key ("taskid")
 );
 
 /*==============================================================*/
@@ -285,15 +366,8 @@ create table "t_wage"
    "wageid"             number               not null,
    USERID               number(11),
    DEPTID               number(11),
-   "baseWage"           number(11,2),
-   "postwage"           number(11,2),
-   "bonus"              number(11,2),
-   "welfare"            number(11,2),
-   "subsidy"            number(11,2),
-   "carAllowance"       number(11,2),
+   "netpay"             number(11,2),
    "overtimePay"        number(11,2),
-   "medicallnsurance"   number(11,2),
-   "socicalSecurity"    number(11,2),
    "taxes"              number(11,2),
    "netPayroll"         number(11,2),
    "absenteeism"        number(11,2),
@@ -301,7 +375,21 @@ create table "t_wage"
    "leave"              number(11,2),
    "wageState"          varchar2(5),
    "wageDate"           date,
+   "issuer"             NUMBER(11),
    constraint PK_T_WAGE primary key ("wageid")
+);
+
+/*==============================================================*/
+/* Table: "welfare"                                             */
+/*==============================================================*/
+create table "welfare" 
+(
+   "welfareid"          number,
+   "subsidy"            number(11,2),
+   "carAllwance"        number(11,2),
+   "netpay"             number(11,2),
+   "medicallnsuranc"    number(11,2),
+   "socialSecurity"     number(11,2)
 );
 
 alter table T_TREE_USER
@@ -324,6 +412,10 @@ alter table "t_evection"
    add constraint FK_T_EVECTI_REFERENCE_T_TREE_U foreign key (USERID)
       references T_TREE_USER (USERID);
 
+alter table "t_evectionAccount"
+   add constraint FK_T_EVECTI_REFERENCE_T_EVECTI foreign key ("evectionID")
+      references "t_evection" ("evectionID");
+
 alter table "t_leave"
    add constraint FK_T_LEAVE_REFERENCE_T_TREE_U foreign key (USERID)
       references T_TREE_USER (USERID);
@@ -335,6 +427,10 @@ alter table "t_overtim"
 alter table "t_pro_dimission"
    add constraint FK_T_PRO_DI_REFERENCE_T_TREE_U foreign key (USERID)
       references T_TREE_USER (USERID);
+
+alter table "t_pro_plan"
+   add constraint FK_T_PRO_PL_REFERENCE_T_PRO_TA foreign key ("taskid")
+      references "t_pro_task" ("taskid");
 
 alter table "t_pro_task"
    add constraint FK_T_PRO_TA_REFERENCE_T_TREE_U foreign key (USERID)
